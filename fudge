@@ -1,0 +1,265 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my %OPTS;
+while( $_ = $ARGV[0], /^-/ ) {
+    shift;
+    last if /^--$/;
+    $OPTS{$_} = $_;
+}
+
+my $ME;  # implementation
+my $IN;  # test file
+my $OUT; # fudged file
+
+if (-f ".spec_config") {
+    open my $cf, "<", ".spec_config";
+    while (<$cf>) {
+        if (m/^\bname\b\s*=\s*(\w+)/) {
+           $ME = $1;
+        }
+    }
+}
+
+if (@ARGV == 3) {
+    # impl test fudged
+    $ME = shift;
+    $IN = shift;
+    $OUT = shift;
+} elsif (@ARGV == 1) {
+    # test
+    $IN = shift; 
+} elsif (@ARGV == 2) {
+    my $arg = shift;
+    if ($arg =~ /\.t$/) {
+        # test fudged
+        $IN = $arg;
+        $OUT = shift;
+    } else {
+        # impl test
+        $ME = $arg;
+        $IN = shift; 
+    }
+}
+
+if (!$OUT and $IN) {
+    ($OUT = $IN) =~ s/\.t$/.$ME/ or $OUT .= ".$ME";
+}
+
+unless ($ME and $IN and $OUT) {
+
+    die <<"USAGE";
+Usage: $0 [options] [implname] testfilename [fudgedtestfilename]
+
+    implname, if not specified on the command line, is pulled from the
+        .spec_config file in your compiler's directory.
+
+    Options:
+    --keep-exit-code
+        by default, fudge modifies the exit code for fudged test files to 1.
+        supplying this option will suppress that behavior.
+
+    Verbs:
+    #?implname [num] skip 'reason'
+        comment out num tests or blocks and call skip(num)
+
+    #?implname [num] eval 'reason'
+        eval num tests or blocks and skip(num) on parsefail
+
+    #?implname [num] try 'reason'
+        try num tests or blocks and fail on exception
+
+    #?implname [num] todo 'reason', :by<1.2.3>
+        run num tests or blocks with todo() preset
+
+    #?implname emit your_ad_here();
+        just pass through your_ad_here();
+
+    #?DOES count
+        for all implementations, the following thing does count tests
+        (disables any attempt to autocount tests within the construct)
+        when construct is a sub, registers the sub name as tester
+        (and multiplies calls to tester sub by count tests)
+
+    where
+    implname is the lc name of your implementation, e.g. pugs or rakudo
+    num is the number of statements or blocks to preprocess, defaults to 1
+    count is how many tests the following construct counts as
+
+USAGE
+}
+unless (-e $IN) {
+    die "$0: No such test file '$IN'\n";
+}
+
+unlink $OUT;        # old fudged version, may or may not regenerate...
+
+my $REALLY_FUDGED = 0;
+my $OUTPUT = "";
+my $FUDGE = "";
+our $PENDING = 0;
+my $ARGS = '';
+my $IS = '\\b(?:is|ok|nok|is_deeply|is_approx|isnt|like|unlike|eval_dies_ok|cmp_ok|isa_ok|use_ok|throws_ok|dies_ok|lives_ok|eval_lives_ok|pass|flunk|throws_like)(?:\\b|_)';
+my %DOES;
+my $DOES = 0;
+my $EXIT = $OPTS{'--keep-exit-code'} ? '' : 'exit(1);';
+
+@ARGV = ($IN);
+fudgeblock();
+
+if ($REALLY_FUDGED) {
+    open OUT, ">", $OUT or die "Can't create $OUT: $!";
+    print OUT $OUTPUT;
+    print OUT <<"END";
+
+say "# FUDGED!";
+$EXIT
+END
+    close OUT;
+    print "$OUT\n"; # pick the output file to run
+}
+else {
+    print "$IN\n";  # pick the input file to run
+}
+
+sub fudgeblock {
+    while (<>) {
+        if (/^\s*\#\?DOES[:\s] \s* (.*)/x) {
+            $DOES = $1;
+            next;
+        }
+        if (/^\s*\#\? (\S+?)[:\s] \s* ((\S*).*)/x) {
+            if ($1 eq $ME) {
+                $REALLY_FUDGED = 1;
+                $ARGS = $2;
+                if ($ARGS =~ s/^emit\s*//) {
+                    $_ = $ARGS;
+                    next;
+                }
+                if ($ARGS =~ s/^(\d+)\s*//) {
+                    $PENDING = $1;
+                }
+                else {
+                    $PENDING = 1;
+                }
+                $ARGS =~ s/^(\w+)\s*//;
+                $FUDGE = $1;
+            } elsif ($3 eq 'emit') {
+                $_ = '';
+                next;
+            }
+        }
+
+        next if /^\s*#/;
+        next if /^\s*$/;
+
+        if ($DOES) {
+            if (/^\s*(sub|multi|proto)\b/) {
+                my $tmp = $_;
+                $tmp =~ s/^\s*proto\s+//;
+                $tmp =~ s/^\s*multi\s+//;
+                $tmp =~ s/^\s*sub\s+//;
+                $tmp =~ /^(\w+)/;
+                $DOES{$1} = $DOES;
+                $DOES = 0;
+                next;
+            }
+        }
+
+        next unless $PENDING > 0;
+
+        if (/^\{/) {
+            $PENDING--;
+            if ($FUDGE eq 'todo') {
+                local $PENDING = 999999;    # do all in block as one action
+                $OUTPUT .= $_;
+                $DOES = 0;  # XXX ignore?
+                fudgeblock();
+                $_ = '';
+            }
+            else {
+                my $more;
+                while (defined($more = <>)) {
+                    $_ .= $more;
+                    last if $more =~ /^\}/;
+                }
+                my $numtests = $DOES || do {
+                    my $tmp = $_;
+                    my $nt = 0;
+                    $nt += $1 while $tmp =~ s/^#\?DOES[:\s]\s*(\d+).*\n.*\n//m;
+                    if (%DOES) {
+                            my $does = join('|',keys(%DOES));
+                            $nt += $DOES{$1} while $tmp =~ s/^\s*($does)\b//mx;
+                    }
+                    $nt += () = $tmp =~ m/^(\s*$IS)/mgx;
+                    $nt;
+                };
+                if ($FUDGE eq 'skip') {
+                    s/^/# /mg;
+                    $_ = "skip($ARGS, $numtests);" . $_;
+                }
+                elsif ($FUDGE eq 'try') {
+                    chomp;
+                    $_ = "(try $_) // flunk($ARGS);\n";
+                }
+                elsif ($FUDGE eq 'eval') {
+                    chomp;
+                    s/(['\\])/\\$1/g;
+                    $_ = "eval('$_') // skip($ARGS, $numtests);\n";
+                }
+                else {
+                    warn "Don't know how to mark block for $FUDGE!\n";
+                }
+            }
+        }
+        else {
+            if ($FUDGE eq 'todo') {
+                $DOES = 0;  # XXX ignore?
+                my $does = join '|', keys %DOES;
+                $PENDING -= s/^(\s*)/${1}todo($ARGS); / if /^\s*(?:$IS|$does)\b/;
+            }
+            else {
+                while ($_ !~ /;[ \t]*(#.*)?$/) {
+                    my $more = <>;
+                    last unless $more;
+                    $_ .= $more;
+                }
+                my ($keyword) = /^\s*(\w+)/ || '';
+                my $numtests;
+                if ($DOES{$keyword}) {
+                    $numtests = $DOES{$keyword};
+                }
+                elsif ($DOES) {
+                    $numtests = $DOES;
+                }
+                else {
+                    my $does = join '|', keys %DOES;
+                    next unless /^\s*($IS|$does)/;
+                    $numtests = defined $DOES{$1}? $DOES{$1} : 1;
+                }
+                $PENDING--;
+                $_ = "{ " . $_ . " }";
+                if ($FUDGE eq 'skip') {
+                    s/^/# /mg;
+                    $_ = "skip($ARGS, $numtests); $_\n";
+                }
+                elsif ($FUDGE eq 'try') {
+                    $_ = "(try $_) // flunk($ARGS);\n";
+                }
+                elsif ($FUDGE eq 'eval') {
+                    s/(['\\])/\\$1/g;
+                    $_ = "eval('$_') // skip($ARGS, $numtests);\n";
+                }
+                else {
+                    warn "Don't know how to mark statement for $FUDGE!\n";
+                }
+            }
+        }
+    }
+    continue {
+        $OUTPUT .= $_;
+        return if /^\}/ and $PENDING > 0;
+    }
+}
