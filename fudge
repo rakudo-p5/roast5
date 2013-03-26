@@ -109,6 +109,11 @@ my $EXIT = $OPTS{'--keep-exit-code'} ? '' : 'exit(1);';
 @ARGV = ($IN);
 fudgeblock();
 
+if ($OPTS{'--add_use_perl5'}) {
+    $REALLY_FUDGED = 1;
+    $OUTPUT = "use perl5;\n$OUTPUT";
+}
+
 if ($REALLY_FUDGED) {
     open OUT, ">", $OUT or die "Can't create $OUT: $!";
     print OUT $OUTPUT;
