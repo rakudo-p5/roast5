@@ -111,7 +111,7 @@ fudgeblock();
 
 if ($OPTS{'--add_use_perl5'}) {
     $REALLY_FUDGED = 1;
-    $OUTPUT = "use perl5;\n$OUTPUT";
+    $OUTPUT = "use Test;\nuse perl5;\n$OUTPUT";
 }
 
 if ($REALLY_FUDGED) {
