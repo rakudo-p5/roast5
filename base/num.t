@@ -89,14 +89,13 @@ ok 100000. eq "100000";
 ok -100000. eq "-100000";
 ok 123.456 eq "123.456";
 
-# TODO unless+else
-skip 'TODO unless+else';
-#unless ($^O eq 'posix-bc') {
-##?v5 skip 'expontents NYI'
-#    ok 1e34 eq "1e+34" || 1e34 eq "1e+034";
-#}
-#else
-#{ print "ok 45 # skipped on $^O\n"; }
+unless ($^O eq 'posix-bc') {
+#?v5 skip 'expontents NYI'
+    ok 1e34 eq "1e+34" || 1e34 eq "1e+034";
+}
+else {
+    skip "skipped on $^O";
+}
 
 # see bug #15073
 
