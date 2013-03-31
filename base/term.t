@@ -35,7 +35,6 @@ $x = 1;
 ok $x == '1';
 
 $x = '1E2';
-#?v5 todo 'interpolating exponents NYI'
 ok(($x | 1) == 101);
 
 # check <> pseudoliteral
