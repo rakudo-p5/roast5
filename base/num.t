@@ -17,7 +17,6 @@ ok .1      eq "0.1";
 ok -.1     eq "-0.1";
 ok 10.01   eq "10.01";
 
-#?v5 2 skip 'expontents NYI'
 ok 1e3     eq "1000",  '1e3     eq "1000"';
 ok 10.01e3 eq "10010", '10.01e3 eq "10010"';
 
@@ -53,7 +52,6 @@ ok _ok(".1" + 1,  1.1,  0.005);
 ok _ok("-.1" + 1,  0.9,  0.05);
 ok _ok("10.01" + 1, 11.01, 0.005);
 
-#?v5 2 skip 'expontents NYI'
 ok "1e3" + 1 == 1001;
 ok "10.01e3" + 1 == 10011;
 
@@ -76,7 +74,7 @@ if ($^O eq 'os2') { # In the long run, fix this.  For 5.8.0, deal.
     ok 0.0001 eq "0.0001";
 }
 
-#?v5 2 skip 'expontents NYI'
+#?v5 1 todo 'NYI'
 ok 0.00009 eq "9e-05" || 0.00009 eq "9e-005";
 ok 1.1 eq "1.1";
 ok 1.01 eq "1.01";
@@ -90,7 +88,6 @@ ok -100000. eq "-100000";
 ok 123.456 eq "123.456";
 
 unless ($^O eq 'posix-bc') {
-#?v5 skip 'expontents NYI'
     ok 1e34 eq "1e+34" || 1e34 eq "1e+034";
 }
 else {
@@ -113,12 +110,10 @@ if ($^O eq 'ultrix' || $^O eq 'VMS') {
 
 ok 80000.0000000000000000000000000 == 80000.0;
 
-#?v5 skip 'expontents NYI'
 ok 1.0000000000000000000000000000000000000000000000000000000000000000000e1 == 10.0;
 
 # From Math/Trig - number has to be long enough to exceed at least DBL_DIG
 
-#?v5 skip 'expontents NYI'
 ok _ok(57.295779513082320876798154814169*10,572.95779513082320876798154814169,1e-10);
 
 # Allow uppercase base markers (#76296)
