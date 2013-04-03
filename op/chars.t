@@ -3,10 +3,10 @@
 BEGIN {
     chdir 't' if -d 't';
     @INC = '../lib';
-    require './test.pl';
+#    require './test.pl';
 }
 
-plan tests => 34;
+plan 34;
 
 # because of ebcdic.c these should be the same on asciiish 
 # and ebcdic machines.
@@ -78,5 +78,8 @@ $c = "\c_";
 is (ord($c), 31, '\c_');
 $c = "\c?";
 is (ord($c), 127, '\c?');
-$c = '';
-is (ord($c), 0, 'ord("") is 0');
+#?v5 skip 'ord("") NYI'
+{
+    $c = '';
+    is (ord($c), 0, 'ord("") is 0');
+}
