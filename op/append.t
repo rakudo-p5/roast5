@@ -3,11 +3,11 @@
 BEGIN {
     chdir 't' if -d 't';
     @INC = '../lib';
-    require './test.pl';
+    #require './test.pl';
 }
 
 ##Literal test count since evals below can fail
-plan tests => 13;
+plan 13;
 
 $a = 'ab' . 'c';	# compile time
 $b = 'def';
@@ -25,6 +25,7 @@ is( $_, 'abcdef', 'concat using $_');
 # test that when right argument of concat is UTF8, and is the same
 # variable as the target, and the left argument is not UTF8, it no
 # longer frees the wrong string.
+#?v5 2 skip "Unrecognized directive 'U'"
 {
     sub r2 {
 	my $string = '';
@@ -37,6 +38,7 @@ is( $_, 'abcdef', 'concat using $_');
 }
 
 # test that nul bytes get copied
+#?v5 8 skip "Unrecognized directive 'U'"
 {
     my ($a, $ab)   = ("a", "a\0b");
     my ($ua, $uab) = map pack("U0a*", $_), $a, $ab;
