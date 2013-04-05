@@ -2,11 +2,11 @@
 
 BEGIN {
     chdir 't' if -d 't';
-    @INC = qw(. ../lib); # ../lib needed for test.deparse
-    require "test.pl";
+#    @INC = qw(. ../lib); # ../lib needed for test.deparse
+#    require "test.pl";
 }
 
-plan tests => 35;
+plan 35;
 
 # compile time evaluation
 
@@ -34,7 +34,7 @@ $x = "\x{1234}";
 is(ord($x), 0x1234, 'runtime ord \x{....}');
 
 {
-    no warnings 'utf8'; # avoid Unicode warnings
+#    no warnings 'utf8'; # avoid Unicode warnings
 
 # The following code points are some interesting steps.
     is(ord(chr(   0x100)),    0x100, '0x0100');
@@ -49,18 +49,22 @@ is(ord($x), 0x1234, 'runtime ord \x{....}');
     is(ord(chr(  0xCFFF)),   0xCFFF, '0xCFFF');
     is(ord(chr(  0xD000)),   0xD000, '0xD000');
     is(ord(chr(  0xD7FF)),   0xD7FF, '0xD7FF');
+#?v5 2 skip 'Invalid character for UTF-8 encoding'
     is(ord(chr(  0xD800)),   0xD800, 'surrogate begin (not strict utf-8)');
     is(ord(chr(  0xDFFF)),   0xDFFF, 'surrogate end (not strict utf-8)');
     is(ord(chr(  0xE000)),   0xE000, '0xE000');
+#?v5 4 skip 'Invalid character for UTF-8 encoding'
     is(ord(chr(  0xFDD0)),   0xFDD0, 'first additional noncharacter in BMP');
     is(ord(chr(  0xFDEF)),   0xFDEF, 'last additional noncharacter in BMP');
     is(ord(chr(  0xFFFE)),   0xFFFE, '0xFFFE');
     is(ord(chr(  0xFFFF)),   0xFFFF, 'last three-byte char in UTF-8');
     is(ord(chr( 0x10000)),  0x10000, 'first four-byte char in UTF-8');
+#?v5 3 skip 'Invalid character for UTF-8 encoding'
     is(ord(chr( 0x3FFFF)),  0x3FFFF, 'last four-byte char in UTF-EBCDIC');
     is(ord(chr( 0x40000)),  0x40000, 'first five-byte char in UTF-EBCDIC');
     is(ord(chr( 0xFFFFF)),  0xFFFFF, '0xFFFFF');
     is(ord(chr(0x100000)), 0x100000, '0x100000');
+#?v5 4 skip 'Invalid character for UTF-8 encoding'
     is(ord(chr(0x10FFFF)), 0x10FFFF, 'Unicode last code point');
     is(ord(chr(0x110000)), 0x110000, '0x110000');
     is(ord(chr(0x1FFFFF)), 0x1FFFFF, 'last four-byte char in UTF-8');
