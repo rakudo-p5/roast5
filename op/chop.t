@@ -3,9 +3,12 @@
 BEGIN {
     chdir 't' if -d 't';
     @INC = '../lib';
+#?v5 emit #
     require './test.pl';
 }
 
+#?v5 emit plan 143;
+#?v5 emit #
 plan tests => 143;
 
 $_ = 'abc';
@@ -233,6 +236,7 @@ foreach my $start (@chars) {
     is($utf, "perl", "chopped utf8 NUL");
 }
 
+#?v5 2 skip 'Confused'
 {
     # Change 26011: Re: A surprising segfault
     # to make sure only that these obfuscated sentences will not crash.
@@ -244,6 +248,7 @@ foreach my $start (@chars) {
     ok(1, "extend sp in pp_chomp");
 }
 
+#?v5 4 skip 'Invalid character for UTF-8 encoding'
 {
     # [perl #73246] chop doesn't support utf8
     # the problem was UTF8_IS_START() didn't handle perl's extended UTF8
