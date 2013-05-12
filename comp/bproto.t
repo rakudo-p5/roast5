@@ -17,13 +17,13 @@ my $bar = "bar";
 
 sub test_too_many {
     eval $_[0];
-    print "not " unless $@ =~ /^Too many arguments/;
+    print "not " unless $@ =~ /^Too many arguments|Too many positional parameters/;
     printf "ok %d\n",$i++;
 }
 
 sub test_too_few {
     eval $_[0];
-    print "not " unless $@ =~ /^Not enough arguments/;
+    print "not " unless $@ =~ /(^Not enough arguments|no arguments)/;
     printf "ok %d\n",$i++;
 }
 
