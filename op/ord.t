@@ -2,11 +2,11 @@
 
 BEGIN {
     chdir 't' if -d 't';
-#    @INC = qw(. ../lib); # ../lib needed for test.deparse
-#    require "test.pl";
+    @INC = qw(. ../lib); # ../lib needed for test.deparse
+    require "test.pl";
 }
 
-plan 35;
+plan tests => 35;
 
 # compile time evaluation
 
