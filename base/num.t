@@ -1,5 +1,7 @@
 #!./perl
 
+require "t/test.pl";
+
 print "1..53\n";
 
 # First test whether the number stringification works okay.
