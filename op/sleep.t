@@ -2,12 +2,11 @@
 
 BEGIN {
     chdir 't' if -d 't';
-#    @INC = qw(. ../lib);
+    @INC = qw(. ../lib);
 }
 
-#require "test.pl";
-#plan( tests => 4 );
-print "1..4\n";
+require "test.pl";
+plan( tests => 4 );
 
 use strict;
 use warnings;

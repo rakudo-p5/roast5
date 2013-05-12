@@ -2,8 +2,8 @@
 
 BEGIN {
     chdir 't' if -d 't';
-#    @INC = '../lib';
-#    require './test.pl';
+    @INC = '../lib';
+    require './test.pl';
 }
 
 is( 1 ? 1 : 0, 1, 'compile time, true' );

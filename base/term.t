@@ -2,6 +2,7 @@
 
 BEGIN {
     chdir 't' if -d 't';
+    require './test.pl';
 }
 
 print "1..7\n";
