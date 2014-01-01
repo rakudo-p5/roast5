@@ -2,6 +2,7 @@
 
 BEGIN {
     chdir 't' if -d 't';
+    #?v5 emit #
     @INC = '../lib';
     require './test.pl';
 }
@@ -145,11 +146,14 @@ ok(!defined $empty->{hash}      ,   'Vivify: $empty->{hash} is undef');
 
 # Keys -- lvalue
 $_{foo} = "bar";
-keys \%_ = 65;
-is scalar %_, '1/128', 'keys $hashref as lvalue';
-eval 'keys \@_ = 65';
-like $@, qr/Can't modify keys on reference in scalar assignment/,
-  'keys $arrayref as lvalue dies';
+#?v5 2 skip 'Cannot modify an immutable value'
+{
+    keys \%_ = 65;
+    is scalar %_, '1/128', 'keys $hashref as lvalue';
+    eval 'keys \@_ = 65';
+    like $@, qr/Can't modify keys on reference in scalar assignment/,
+      'keys $arrayref as lvalue dies';
+}
 
 # Keys -- errors
 $errpat = qr/
