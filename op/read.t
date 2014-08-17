@@ -2,8 +2,10 @@
 
 BEGIN {
     chdir 't';
+    #?v5 emit #
     @INC = '../lib';
     require './test.pl';
+    #?v5 emit chdir 'spec';
 }
 use strict;
 
@@ -51,10 +53,13 @@ foreach my $value (@values) {
 	}
       SKIP:
 	foreach my $utf8 (@utf8) {
+        #?v5 emit #
 	    skip "Needs :utf8 layer but no perlio", 2 * @offsets * @lengths
+        #?v5 emit #
 	      if $utf8 and !$has_perlio;
 
 	    open FH, ">$tmpfile" or die "Can't open $tmpfile: $!";
+        #?v5 emit #
 	    binmode FH, "utf8" if $utf8;
 	    print FH $value;
 	    close FH;
@@ -78,6 +83,7 @@ foreach my $value (@values) {
 		    substr ($expect, $offset) = $will_read;
 
 		    open FH, $tmpfile or die "Can't open $tmpfile: $!";
+            #?v5 emit #
 		    binmode FH, "utf8" if $utf8;
 		    my $what = sprintf "%d into %d l $length o $offset",
 			ord $value, ord $buffer;
